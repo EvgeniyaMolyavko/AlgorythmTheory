@@ -1,0 +1,61 @@
+public class Main {
+    public static void main(String[] args) {
+
+        int[] mas = {50, 57, 78, 34, 41, 68, 47, 61, 38};
+        //sortByChoice(mas);
+        System.out.println();
+        insertionSort(mas);
+
+
+    }
+
+    public static void insertionSort(int [] mas) {
+        int forChange = 0;
+
+        for(int i=1; i<mas.length; i++) {
+            for(int j=i; j>0; j--) {
+                if(mas[j-1] > mas[j]){
+                    forChange = mas[j-1];
+                    mas[j-1] = mas[j];
+                    mas[j] = forChange;
+                }
+
+            }
+            printMas(mas);
+        }
+
+    }
+
+
+
+        public static void sortByChoice(int [] mas) {
+        int min = 0;
+
+        for(int i=0; i<mas.length-1; i++) {
+            int indEnd = i;
+            min = mas[i];
+
+            for(int j=i; j<mas.length; j++){
+                if(mas[j] < min){
+                    min = mas[j];
+                    indEnd = j;
+                }
+            }
+
+            int forChange = mas[i];
+            mas[i] = mas[indEnd];
+            mas[indEnd] = forChange;
+            printMas(mas);
+        }
+    }
+
+
+
+    public static void printMas(int [] mas){
+        System.out.println();
+
+        for(int elem : mas) {
+            System.out.print(elem + "   ");
+        }
+    }
+}
