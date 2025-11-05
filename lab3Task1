@@ -1,0 +1,61 @@
+public class Main {
+            static int comparisons = 0;
+            static int swaps = 0;
+
+            public static void main(String[] args) {
+                int[] A = {50, 57, 78, 34, 41, 68, 47, 61, 38};
+                int n = A.length;
+
+                System.out.println("Початковий масив:");
+                printArray(A);
+
+                buildMaxHeap(A, n);
+
+                System.out.println("\nМаксимальна купа:");
+                printArray(A);
+
+                System.out.println("\nКількість порівнянь: " + comparisons);
+                System.out.println("Кількість обмінів: " + swaps);
+            }
+
+            static void buildMaxHeap(int[] A, int n) {
+                for (int i = n / 2 - 1; i >= 0; i--) {
+                    sink(A, i, n);
+                }
+            }
+
+            static void sink(int[] A, int i, int n) {
+                int largest = i;
+                int left = 2 * i + 1;
+                int right = 2 * i + 2;
+
+                if (left < n) {
+                    comparisons++;
+                    if (A[left] > A[largest])
+                        largest = left;
+                }
+
+                if (right < n) {
+                    comparisons++;
+                    if (A[right] > A[largest])
+                        largest = right;
+                }
+
+                if (largest != i) {
+                    swaps++;
+                    int temp = A[i];
+                    A[i] = A[largest];
+                    A[largest] = temp;
+                    sink(A, largest, n);
+                }
+            }
+
+            static void printArray(int[] A) {
+                for (int x : A)
+                    System.out.print(x + " ");
+                System.out.println();
+            }
+
+
+
+}
