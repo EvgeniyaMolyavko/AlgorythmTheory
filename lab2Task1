@@ -10,9 +10,7 @@ public class Main {
         System.out.println("Список після cортування злиттям: ");
         printList(listPart(list));
 
-        System.out.println("Список після швидкого сортування: ");
-        quickSort(list, 0, list.size() - 1);
-        printList(list);
+       
     }
 
     public static ArrayList<Integer> listPart(ArrayList<Integer> list){
