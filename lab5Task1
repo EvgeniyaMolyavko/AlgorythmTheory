@@ -1,0 +1,60 @@
+import java.util.Arrays;
+
+public class Main {
+    static final int INF = 999999;
+    public static void main(String[] args) {
+        int[][] G = {
+                {0,  4,  1,  7,  INF, INF, INF, INF},
+                {4,  0,  INF, 5,  INF, 9,   INF, INF},
+                {1,  INF, 0,  INF, INF, INF, INF, 2},
+                {7,  5,  INF, 0,   3,   INF, INF, INF},
+                {INF,INF,INF,3,   0,   2,   8,   INF},
+                {INF,9,  INF,INF, 2,   0,   7,   1},
+                {INF,INF,INF,INF, 8,   7,   0,   6},
+                {INF,INF,2,  INF, INF, 1,   6,   0}
+        };
+
+        primMST(G);
+    }
+
+    public static void primMST(int[][] graph) {
+        int V = graph.length;
+
+        int[] key = new int[V];
+        int[] parent = new int[V];
+        boolean[] used = new boolean[V];
+
+        Arrays.fill(key, INF);
+        key[0] = 0;
+        parent[0] = -1;
+
+        for (int i = 0; i < V - 1; i++) {
+
+            int u = minKey(key, used);
+            used[u] = true;
+
+            for (int v = 0; v < V; v++) {
+                if (graph[u][v] != 0 && graph[u][v] < INF && !used[v] && graph[u][v] < key[v]) {
+                    parent[v] = u;
+                    key[v] = graph[u][v];
+                }
+            }
+        }
+
+        System.out.println("Алгоритм Пріма:");
+        for (int i = 1; i < V; i++) {
+            System.out.printf("%d — %d  (вага %d)\n", parent[i] + 1, i + 1, graph[i][parent[i]]);
+        }
+    }
+
+    public static int minKey(int[] key, boolean[] used) {
+        int min = INF, index = -1;
+        for (int i = 0; i < key.length; i++) {
+            if (!used[i] && key[i] < min) {
+                min = key[i];
+                index = i;
+            }
+        }
+        return index;
+    }
+}
