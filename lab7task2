@@ -1,0 +1,271 @@
+import java.util.*;
+
+public class Main {
+
+    static class Node {
+        int key;
+        Node left, right, parent;
+        boolean color; 
+
+        Node(int key) {
+            this.key = key;
+            this.color = true; 
+        }
+    }
+
+    static class RBTree {
+        private Node root;
+        private final boolean RED = true;
+        private final boolean BLACK = false;
+
+        // ======== Insert ========
+        public void insert(int key) {
+            Node node = new Node(key);
+            root = bstInsert(root, node);
+            fixInsert(node);
+        }
+
+        private Node bstInsert(Node root, Node node) {
+            if (root == null) return node;
+            if (node.key < root.key) {
+                root.left = bstInsert(root.left, node);
+                root.left.parent = root;
+            } else {
+                root.right = bstInsert(root.right, node);
+                root.right.parent = root;
+            }
+            return root;
+        }
+
+        private void fixInsert(Node node) {
+            Node parent, grandparent;
+            while (node != root && node.parent.color == RED) {
+                parent = node.parent;
+                grandparent = parent.parent;
+                if (parent == grandparent.left) {
+                    Node uncle = grandparent.right;
+                    if (uncle != null && uncle.color == RED) {
+                        parent.color = BLACK;
+                        uncle.color = BLACK;
+                        grandparent.color = RED;
+                        node = grandparent;
+                    } else {
+                        if (node == parent.right) {
+                            node = parent;
+                            leftRotate(node);
+                        }
+                        parent.color = BLACK;
+                        grandparent.color = RED;
+                        rightRotate(grandparent);
+                    }
+                } else {
+                    Node uncle = grandparent.left;
+                    if (uncle != null && uncle.color == RED) {
+                        parent.color = BLACK;
+                        uncle.color = BLACK;
+                        grandparent.color = RED;
+                        node = grandparent;
+                    } else {
+                        if (node == parent.left) {
+                            node = parent;
+                            rightRotate(node);
+                        }
+                        parent.color = BLACK;
+                        grandparent.color = RED;
+                        leftRotate(grandparent);
+                    }
+                }
+            }
+            root.color = BLACK;
+        }
+
+        private void leftRotate(Node node) {
+            Node rightChild = node.right;
+            node.right = rightChild.left;
+            if (rightChild.left != null) rightChild.left.parent = node;
+            rightChild.parent = node.parent;
+            if (node.parent == null) root = rightChild;
+            else if (node == node.parent.left) node.parent.left = rightChild;
+            else node.parent.right = rightChild;
+            rightChild.left = node;
+            node.parent = rightChild;
+        }
+
+        private void rightRotate(Node node) {
+            Node leftChild = node.left;
+            node.left = leftChild.right;
+            if (leftChild.right != null) leftChild.right.parent = node;
+            leftChild.parent = node.parent;
+            if (node.parent == null) root = leftChild;
+            else if (node == node.parent.left) node.parent.left = leftChild;
+            else node.parent.right = leftChild;
+            leftChild.right = node;
+            node.parent = leftChild;
+        }
+
+        // ======== Delete ========
+        public void delete(int key) {
+            Node node = search(root, key);
+            if (node != null) deleteNode(node);
+        }
+
+        private Node search(Node root, int key) {
+            if (root == null || root.key == key) return root;
+            if (key < root.key) return search(root.left, key);
+            else return search(root.right, key);
+        }
+
+        private void deleteNode(Node z) {
+            Node y = z;
+            Node x;
+            boolean yOriginalColor = y.color;
+
+            if (z.left == null) {
+                x = z.right;
+                transplant(z, z.right);
+            } else if (z.right == null) {
+                x = z.left;
+                transplant(z, z.left);
+            } else {
+                y = minimum(z.right);
+                yOriginalColor = y.color;
+                x = y.right;
+                if (y.parent == z) {
+                    if (x != null) x.parent = y;
+                } else {
+                    transplant(y, y.right);
+                    y.right = z.right;
+                    if (y.right != null) y.right.parent = y;
+                }
+                transplant(z, y);
+                y.left = z.left;
+                if (y.left != null) y.left.parent = y;
+                y.color = z.color;
+            }
+
+            if (yOriginalColor == BLACK) {
+                fixDelete(x, y.parent != null ? y.parent : null);
+            }
+        }
+
+        private void transplant(Node u, Node v) {
+            if (u.parent == null) root = v;
+            else if (u == u.parent.left) u.parent.left = v;
+            else u.parent.right = v;
+            if (v != null) v.parent = u.parent;
+        }
+
+        private Node minimum(Node node) {
+            while (node.left != null) node = node.left;
+            return node;
+        }
+
+        private void fixDelete(Node x, Node parent) {
+            Node w;
+            while ((x != root) && (x == null || x.color == BLACK)) {
+                if (parent == null) break; // null-safe
+                if (x == parent.left) {
+                    w = parent.right;
+                    if (w != null && w.color == RED) {
+                        w.color = BLACK;
+                        parent.color = RED;
+                        leftRotate(parent);
+                        w = parent.right;
+                    }
+                    if ((w == null || (w.left == null || w.left.color == BLACK) &&
+                            (w.right == null || w.right.color == BLACK))) {
+                        if (w != null) w.color = RED;
+                        x = parent;
+                        parent = x.parent;
+                    } else {
+                        if (w.right == null || w.right.color == BLACK) {
+                            if (w.left != null) w.left.color = BLACK;
+                            w.color = RED;
+                            rightRotate(w);
+                            w = parent.right;
+                        }
+                        if (w != null) w.color = parent.color;
+                        parent.color = BLACK;
+                        if (w.right != null) w.right.color = BLACK;
+                        leftRotate(parent);
+                        x = root;
+                        break;
+                    }
+                } else {
+                    w = parent.left;
+                    if (w != null && w.color == RED) {
+                        w.color = BLACK;
+                        parent.color = RED;
+                        rightRotate(parent);
+                        w = parent.left;
+                    }
+                    if ((w == null || (w.left == null || w.left.color == BLACK) &&
+                            (w.right == null || w.right.color == BLACK))) {
+                        if (w != null) w.color = RED;
+                        x = parent;
+                        parent = x.parent;
+                    } else {
+                        if (w.left == null || w.left.color == BLACK) {
+                            if (w.right != null) w.right.color = BLACK;
+                            w.color = RED;
+                            leftRotate(w);
+                            w = parent.left;
+                        }
+                        if (w != null) w.color = parent.color;
+                        parent.color = BLACK;
+                        if (w.left != null) w.left.color = BLACK;
+                        rightRotate(parent);
+                        x = root;
+                        break;
+                    }
+                }
+            }
+            if (x != null) x.color = BLACK;
+        }
+
+        // ======== Traversals ========
+        public void preorder(Node node) {
+            if (node == null) return;
+            System.out.print(node.key + (node.color ? "(R) " : "(B) "));
+            preorder(node.left);
+            preorder(node.right);
+        }
+
+        public void inorder(Node node) {
+            if (node == null) return;
+            inorder(node.left);
+            System.out.print(node.key + (node.color ? "(R) " : "(B) "));
+            inorder(node.right);
+        }
+
+        public void postorder(Node node) {
+            if (node == null) return;
+            postorder(node.left);
+            postorder(node.right);
+            System.out.print(node.key + (node.color ? "(R) " : "(B) "));
+        }
+
+        public Node getRoot() { return root; }
+    }
+
+    public static void main(String[] args) {
+        int[] data = {54, 65, 7, 33, 86, 29, 11, 91, 12};
+        RBTree tree = new RBTree();
+
+        System.out.println("Вставка елементів:");
+        for (int x : data) tree.insert(x);
+
+        System.out.println("\nIn-order після вставки:");
+        tree.inorder(tree.getRoot());
+        System.out.println("\n");
+
+        // Видаляємо три чорні вузли по черзі
+        int[] deleteKeys = {33, 11, 29};
+        for (int key : deleteKeys) {
+            System.out.println("\nВидалення " + key + ":");
+            tree.delete(key);
+            tree.inorder(tree.getRoot());
+            System.out.println();
+        }
+    }
+}
