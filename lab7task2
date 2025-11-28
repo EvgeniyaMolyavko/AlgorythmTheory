@@ -5,11 +5,11 @@ public class Main {
     static class Node {
         int key;
         Node left, right, parent;
-        boolean color; 
+        boolean color;
 
         Node(int key) {
             this.key = key;
-            this.color = true; 
+            this.color = true;
         }
     }
 
@@ -259,7 +259,6 @@ public class Main {
         tree.inorder(tree.getRoot());
         System.out.println("\n");
 
-        // Видаляємо три чорні вузли по черзі
         int[] deleteKeys = {33, 11, 29};
         for (int key : deleteKeys) {
             System.out.println("\nВидалення " + key + ":");
