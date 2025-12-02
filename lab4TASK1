@@ -1,0 +1,132 @@
+import java.util.*;
+
+public class Main {
+    private static final char[] UKR_LETTERS = {
+            'а','б','в','г','ґ','д','е','є','ж','з','и','і','ї','й',
+            'к','л','м','н','о','п','р','с','т','у','ф','х','ц','ч','ш','щ','ь','ю','я'
+    };
+    private static final Map<Character,Integer> POS = new HashMap<>();
+    static {
+        for (int i = 0; i < UKR_LETTERS.length; ++i) {
+            POS.put(UKR_LETTERS[i], i+1);
+        }
+    }
+
+    private static final double A = (Math.sqrt(5.0) - 1.0) / 2.0;
+
+    public static int stringToKey(String s) {
+        s = s.toLowerCase(Locale.forLanguageTag("uk"));
+        int sum = 0;
+        for (int i = 0; i < s.length(); ++i) {
+            char ch = s.charAt(i);
+            Integer p = POS.get(ch);
+            if (p != null) sum += p;
+        }
+        return sum;
+    }
+
+    public static int hDiv(int K) {
+        return K % 13;
+    }
+
+    public static int hMul(int K) {
+        double frac = (K * A) % 1.0;
+        return (int) Math.floor(16.0 * frac);
+    }
+
+    public static class ChainedHashTable {
+        private final List<List<String>> table;
+        private final int m;
+        private final boolean useMul;
+
+        public ChainedHashTable(int m, boolean useMul) {
+            this.m = m;
+            this.useMul = useMul;
+            table = new ArrayList<>(m);
+            for (int i = 0; i < m; ++i) table.add(new LinkedList<>());
+        }
+
+        public void insert(String word, int key, java.util.function.IntUnaryOperator hashFunc) {
+            int idx = hashFunc.applyAsInt(key);
+            table.get(idx).add(word);
+        }
+
+        public void display() {
+            System.out.println("Таблиця (m=" + m + (useMul ? ", множення)" : ", ділення)"));
+            for (int i = 0; i < m; ++i) {
+                System.out.printf("%2d: %s\n", i, table.get(i));
+            }
+        }
+
+        public Map<String, Double> analyze() {
+            int total = 0;
+            int nonEmpty = 0;
+            int collisions = 0;
+            int maxChain = 0;
+            for (List<String> chain : table) {
+                int L = chain.size();
+                total += L;
+                if (L > 0) nonEmpty++;
+                if (L > 1) collisions += (L - 1);
+                if (L > maxChain) maxChain = L;
+            }
+            double avgAll = (double) total / m;
+            double avgNonEmpty = nonEmpty == 0 ? 0.0 : (double) total / nonEmpty;
+            Map<String, Double> res = new HashMap<>();
+            res.put("totalElements", (double) total);
+            res.put("nonEmptyBuckets", (double) nonEmpty);
+            res.put("collisions", (double) collisions);
+            res.put("maxChain", (double) maxChain);
+            res.put("avgAll", avgAll);
+            res.put("avgNonEmpty", avgNonEmpty);
+            return res;
+        }
+    }
+
+    // Тестування на фразі
+    public static void main(String[] args) {
+        String phrase = "У чужих руках завжди хлібина більша, а праця легша.";
+        String[] raw = phrase.split("\\s+");
+        List<String> words = new ArrayList<>();
+        for (String w : raw) {
+            StringBuilder sb = new StringBuilder();
+            for (char ch : w.toLowerCase().toCharArray()) {
+                if (POS.containsKey(ch)) sb.append(ch);
+            }
+            if (sb.length() > 0) words.add(sb.toString());
+        }
+
+        System.out.println("Слова (після нормалізації): " + words);
+
+        ChainedHashTable tDiv = new ChainedHashTable(13, false);
+        ChainedHashTable tMul = new ChainedHashTable(16, true);
+
+        for (String w : words) {
+            int K = stringToKey(w);
+            tDiv.insert(w, K, k -> hDiv(k));
+            tMul.insert(w, K, k -> hMul(k));
+            System.out.printf("Слово: %-10s  K=%3d  h(слово(ділення)))=%2d  h(слово(множення))=%2d\n", w, K, hDiv(K), hMul(K));
+        }
+        System.out.println();
+        tDiv.display();
+        System.out.println();
+        tMul.display();
+
+        System.out.println("\n Аналіз результатів \n");
+        var aDiv = tDiv.analyze();
+        var aMul = tMul.analyze();
+        System.out.println("DIV m=13 -> total=" + aDiv.get("totalElements").intValue()
+                + ", nonEmpty=" + aDiv.get("nonEmptyBuckets").intValue()
+                + ", collisions=" + aDiv.get("collisions").intValue()
+                + ", maxChain=" + aDiv.get("maxChain").intValue()
+                + ", avgAll=" + String.format("%.3f", aDiv.get("avgAll"))
+                + ", avgNonEmpty=" + String.format("%.3f", aDiv.get("avgNonEmpty")));
+
+        System.out.println("MUL m=16 -> total=" + aMul.get("totalElements").intValue()
+                + ", nonEmpty=" + aMul.get("nonEmptyBuckets").intValue()
+                + ", collisions=" + aMul.get("collisions").intValue()
+                + ", maxChain=" + aMul.get("maxChain").intValue()
+                + ", avgAll=" + String.format("%.4f", aMul.get("avgAll"))
+                + ", avgNonEmpty=" + String.format("%.4f", aMul.get("avgNonEmpty")));
+    }
+}
