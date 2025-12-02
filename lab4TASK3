@@ -1,0 +1,134 @@
+import java.util.*;
+
+public class Main {
+
+    static final char[] UKR = {
+            'а','б','в','г','ґ','д','е','є','ж','з','и','і','ї','й',
+            'к','л','м','н','о','п','р','с','т','у','ф','х','ц','ч','ш','щ','ь','ю','я'
+    };
+    static final Map<Character,Integer> POS = new HashMap<>();
+
+    static {
+        for (int i = 0; i < UKR.length; i++) {
+            POS.put(UKR[i], i + 1);
+        }
+    }
+
+    public static int stringToKey(String s) {
+        s = s.toLowerCase();
+        int sum = 0;
+        for (char ch : s.toCharArray()) {
+            if (POS.containsKey(ch)) sum += POS.get(ch);
+        }
+        return sum;
+    }
+
+    public static int hDiv(int K) {
+        return K % 13;
+    }
+
+    static final double A = (Math.sqrt(5) - 1) / 2;   // ≈ 0.618...
+
+    public static int hMul(int K) {
+        double frac = (K * A) % 1;
+        return (int) Math.floor(16 * frac);
+    }
+
+    static class ClosedHashing {
+        String[] table;
+        int m;
+
+        ClosedHashing(int m) {
+            this.m = m;
+            table = new String[m];
+        }
+
+        // Вставка з лінійним пробуванням
+        public void insert(String word, int key, java.util.function.IntUnaryOperator hashFunc) {
+            int idx = hashFunc.applyAsInt(key) % m;
+            if (idx < 0) idx += m;
+
+            for (int i = 0; i < m; i++) {
+                int pos = (idx + i) % m;
+                if (table[pos] == null) {
+                    table[pos] = word;
+                    return;
+                }
+            }
+            System.out.println("Таблиця переповнена, вставити \"" + word + "\" неможливо.");
+        }
+
+        public void display(String title) {
+            System.out.println("\n=== " + title + " (m = " + m + ") ===");
+            for (int i = 0; i < m; i++) {
+                System.out.printf("%2d : %s\n", i, table[i]);
+            }
+        }
+
+        public void analyze() {
+            int total = 0;
+            int filled = 0;
+            int longest = 0;
+
+            int currentChain = 0;
+
+            for (int i = 0; i < m; i++) {
+                if (table[i] != null) {
+                    total++;
+                    filled++;
+                    currentChain++;
+                    if (currentChain > longest) longest = currentChain;
+                } else {
+                    currentChain = 0;
+                }
+            }
+
+            int collisions = total - filled;
+
+            System.out.println("\nАналіз:");
+            System.out.println("  Всього елементів     = " + total);
+            System.out.println("  Заповнених комірок   = " + filled);
+            System.out.println("  Кількість колізій    = " + collisions);
+            System.out.println("  Макс. кластер        = " + longest);
+        }
+    }
+
+
+    public static void main(String[] args) {
+
+        String phrase = "У чужих руках завжди хлібина більша, а праця легша.";
+
+        // 1. Розбиття на слова
+        List<String> words = new ArrayList<>();
+        for (String w : phrase.toLowerCase().split(" ")) {
+            StringBuilder sb = new StringBuilder();
+            for (char ch : w.toCharArray()) {
+                if (POS.containsKey(ch)) sb.append(ch);
+            }
+            if (sb.length() > 0) words.add(sb.toString());
+        }
+
+        ClosedHashing tDiv = new ClosedHashing(13);
+        ClosedHashing tMul = new ClosedHashing(16);
+
+        System.out.println("Слово | K | hDiv | hMul");
+        for (String w : words) {
+            int K = stringToKey(w);
+            int hd = hDiv(K);
+            int hm = hMul(K);
+            System.out.printf("%10s | %3d | %3d | %3d\n", w, K, hd, hm);
+
+            tDiv.insert(w, K, Main::hDiv);
+            tMul.insert(w, K, Main::hMul);
+        }
+
+        tDiv.display("Таблиця (метод ділення)");
+        tMul.display("Таблиця (метод множення)");
+
+        System.out.println("\n Аналіз таблиці (ділення)");
+        tDiv.analyze();
+
+        System.out.println("\n Аналіз таблиці (множення)");
+        tMul.analyze();
+    }
+}
